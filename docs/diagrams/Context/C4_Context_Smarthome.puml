@@ -1,0 +1,27 @@
+@startuml C4_Context_Smarthome
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+
+Person(user, "User", "Пользователь(-и) системы")
+Person(admin, "Admin", "Администратор системы")
+Person_Ext(support, "Support Service", "Служба поддержки")
+
+System(monoApp, "Monolithic App SmartHome", "Монолитное единое приложение для управления умным домом")
+
+System_Ext(heatSys, "Heat system", "Система управления отоплением")
+System_Ext(lightSys, "Light system", "Система управления светом")
+System_Ext(temperatureSys, "Temperature system", "Система управления температурой")
+System_Ext(doorSys, "Door system", "Система управления воротами и дверями")
+System_Ext(videoSys, "Video system", "Система видеонаблюдения")
+
+Rel(user, monoApp, "Управляет отоплением, температурой светом, воротами", "REST API [HTTPS]")
+Rel(admin, monoApp, "Управляет настройкой оборудования, пользователями системы", "REST API [HTTPS]")
+Rel(support, monoApp, "Техническая поддержка приложения", "Внешний доступ со стороны обслуживающей компании")
+
+Rel(monoApp, heatSys , "Включение и отключение отопления", "REST API [HTTPS]")
+Rel(monoApp, lightSys, "Включение и отключение света", "REST API [HTTPS]")
+Rel(monoApp, temperatureSys, "Проверка и управление температурой", "REST API [HTTPS]")
+Rel(monoApp, doorSys, "Открытие и закрытие дверей\ворот", "REST API [HTTPS]")
+Rel(monoApp, videoSys, "Управление видеонаблюдением", "REST API [HTTPS]")
+
+@enduml
