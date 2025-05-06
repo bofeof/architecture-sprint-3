@@ -1,41 +1,43 @@
-name: PlantUML Diagrams
+# name: Generate PlantUML Diagrams
 
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+# on:
+#   push:
+#     branches:
+#       - main
+#   pull_request:
+#     branches:
+#       - main
 
-jobs:
-  generate-diagrams:
-    runs-on: ubuntu-latest
+# jobs:
+#   generate-diagrams:
+#     runs-on: ubuntu-latest
 
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+#     steps:
+#     - name: Checkout repository
+#       uses: actions/checkout@v3
 
-    - name: Set up Java
-      uses: actions/setup-java@v2
-      with:
-        java-version: '11'
+#     - name: Set up Java
+#       uses: actions/setup-java@v3
+#       with:
+#         java-version: '17'
+#         distribution: 'temurin'
 
-    - name: Install PlantUML
-      run: sudo apt-get install plantuml
+#     - name: Install Graphviz
+#       run: sudo apt-get update && sudo apt-get install -y graphviz
 
-    - name: Generate Diagrams
-      run: |
-        plantuml diagrams/context/*.puml
-        plantuml diagrams/container/*.puml
-        plantuml diagrams/component/*.puml
-        plantuml diagrams/code/*.puml
+#     - name: Download PlantUML
+#       run: curl -L -o plantuml.jar https://github.com/plantuml/plantuml/releases/latest/download/plantuml.jar
 
-    - name: Commit Diagrams
-      run: |
-        git config --local user.email "github-actions[bot]@users.noreply.github.com"
-        git config --local user.name "github-actions[bot]"
-        git add diagrams/**/*.png
-        git commit -m "Automated diagram generation"
-        git push origin main
-      if: success()
+#     - name: Generate UML Diagrams (SVG)
+#       run: java -jar plantuml.jar -tsvg -o . docs/**/*.puml
+
+#     - name: Configure Git
+#       run: |
+#         git config --local user.email "github-actions[bot]@users.noreply.github.com"
+#         git config --local user.name "github-actions[bot]"
+
+#     - name: Commit and push SVG diagrams
+#       run: |
+#         git add diagrams/**/*.svg
+#         git commit -m "Auto-generated UML diagrams (SVG)" || echo "No changes to commit"
+#         git push origin main

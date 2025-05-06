@@ -1,18 +1,18 @@
-@startuml C4_Context_Smarthome
+@startuml C4_Context_Smarthome_TO-BE
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
 
-title Диаграмма контекста (1-й уровень)
+title Диаграмма контекста TO-BE. Добавлены пользователи и новые системы (1-й уровень)
 
 Person(user, "User", "Пользователь(-и) системы")
 Person(admin, "Admin", "Администратор системы")
 Person_Ext(support, "Support Service", "Служба поддержки")
 
-System(monoApp, "Monolithic App SmartHome", "Монолитное единое приложение для управления умным домом")
+System(monoApp, "App SmartHome", "Приложение для управления умным домом")
 
 System_Ext(heatSys, "Heat system", "Система управления отоплением")
 System_Ext(lightSys, "Light system", "Система управления светом")
 System_Ext(temperatureSys, "Temperature system", "Система управления температурой")
-System_Ext(gateSys, "Door system", "Система управления воротами и дверями")
+System_Ext(gateSys, "Gate system", "Система управления воротами и дверями")
 System_Ext(videoSys, "Video system", "Система видеонаблюдения")
 System_Ext(deviceSys, "Device system", "Система управления оборудованием")
 

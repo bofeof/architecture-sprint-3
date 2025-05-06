@@ -1,16 +1,21 @@
 @startuml C4_Container_Smarthome
+
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
 title Диаграмма контейнера (2-й уровень)
 
-skinparam nodesep 20
+skinparam nodesep 40
 skinparam ranksep 150
 LAYOUT_WITH_LEGEND()
 
 
 Person(user, "User", "Пользователь(-и) системы")
 Person(admin, "Admin", "Администратор системы")
-Person_Ext(support, "Support Service", "Служба поддержки")
 
+Boundary(company, "Компания Smart Home"){
+    Person_Ext(support, "Support Service", "Служба поддержки")
+    System_Ext(device_service_ext, "Device registration service", "Внешний сервис провайдера для проверки оборудования")
+}
 
 
 
@@ -63,6 +68,8 @@ Rel(support, mobile_app, "")
 
 Rel(web_app, api_gateway_web, "")
 Rel(mobile_app, api_gateway_mob, "")
+
+Rel(device_service, device_service_ext, "REST API")
 
 
 ' API Gateway x Services

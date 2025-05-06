@@ -12,11 +12,25 @@
 - **Пользователи** могут удаленно включать/выключать отопление в своих домах.
 - **Система** поддерживает функционал обработки команд от пользователя на включение и выключение отопления через веб-интерфейс.
 
+**Актуальные API методы**
+| Метод    | Эндпойнт | Описание |
+| -------- | -------  |-------  |
+|GET | /api/heating/{id}| Fetching heating system with id {} |
+|PUT | /api/heating/{id}| Updating heating system with id {} |
+|POST | /{id}/turn-on | Turning on heating system with id {} |
+|POST | /{id}/turn-off| Turning off heating system with id {} |
+
 
 **Мониторинг температуры:**
 
-- **Пользователи** могут просматривать текущую температуру в своих домах через веб-интерфейс
+- **Пользователи** могут просматривать текущую температуру в своих домах через веб-интерфейс, устанавливать температуру.
 - **Система** получает данные о температуре с датчиков, установленных в домах
+
+**Актуальные API методы**
+| Метод    | Эндпойнт | Описание |
+| -------- | -------  |-------  |
+|POST | /{id}/set-temperature| Setting target temperature to {} for heating system with id {} |
+|GET | /{id}/current-temperature | Fetching current temperature for heating system with id {} |
 
 
 ### 2. Анализ архитектуры монолитного приложения
@@ -67,8 +81,18 @@
 
 ### 5. Визуализация контекста системы — диаграмма С4
 
-[Схема C4 Context UML](./diagrams/Context/C4_Context_Smarthome.puml)
-![image info](./diagrams/Context/C4_Context_Smarthome.svg)
+Диаграмма контекста с учетом текущего функционала: централизованное управление отоплением и температурой
+
+
+**AS-IS**
+* [Схема C4 Context UML AS-IS](./diagrams/Context/C4_Context_Smarthome_AS-IS.puml)
+![image info](./diagrams/Context/C4_Context_Smarthome_AS-IS.svg)
+---
+**TO-BE**
+* [Схема C4 Context UML AS-IS](./diagrams/Context/C4_Context_Smarthome_TO-BE.puml)
+
+![image info](./diagrams/Context/C4_Context_Smarthome_TO-BE.svg)
+
 
 
 # Задание 2. Проектирование микросервисной архитектуры
@@ -86,25 +110,22 @@
 |VideoService| Управление видеонаблюдением |
 |MonitoringService|Мониторинг, сбор метрик, логов|
 |AuthService|Авторизация и аутентификация|
-|API Gateway|Точка входа для клиентских запросов|
+|API Gateway|Точка входа для клиентских запросов. Предлагается сделать два gateway: для веб и моб. версии|
 |NotificationService|Управление уведомлениями|
 
+----- 
+
 **Диаграмма контейнеров (Containers)**
-[Схема C4 Context UML](./diagrams/Container/C4_Container_Smarthome.puml)
+
+TO-BE
+* [Схема C4 Containers UML](./diagrams/Container/C4_Container_Smarthome.puml)
 ![image info](./diagrams/Container/C4_Container_Smarthome.svg)
-
-
-
-
-
-
-
-
 
 
 **Диаграмма компонентов (Components)**
 
-Добавьте диаграмму для каждого из выделенных микросервисов.
+
+
 
 **Диаграмма кода (Code)**
 
