@@ -18,8 +18,7 @@ Boundary(company, "Компания Smart Home"){
 }
 
 
-
-System_Boundary(smartHome, "Smart Home System", $link="https://github.com/plantuml-stdlib/C4-PlantUML") {
+System_Boundary(smartHome, "Smart Home System") {
     
     ' Apps
     Container(web_app, "Web \SPA Application",  "React", "Веб-приложение",)
@@ -34,8 +33,7 @@ System_Boundary(smartHome, "Smart Home System", $link="https://github.com/plantu
     Container(device_service, "Device Service", "Java + PostgreSQL", "Cервис для управления оборудованием")
     Container(heating_service, "Heating Service", "Java + PostgreSQL", "Cервис для управления отоплением")
     Container(temperature_service, "Temperature Service", "Java + PostgreSQL", "Cервис для управления температурой")
-    Container(user_service, "User Service", "Java + PostgreSQL", "Cервис для управление пользователем")
-    Container(admin_service, "Admin Service", "Java + PostgreSQL", "Cервис для управление администратором ")
+    Container(user_service, "User Service", "Java + PostgreSQL", "Cервис для управление пользователями, администраторами, настройка ролей")
     Container(light_service, "Light Service", "Java + PostgreSQL", "Cервис для управления светом")
     Container(gate_service, "Gate Service", "Java + PostgreSQL", "Cервис для управления воротами")
     Container(video_service, "Video Service", "Java + TimescaleDB", "Cервис для видеостриминга")
@@ -56,8 +54,6 @@ System_Boundary(smartHome, "Smart Home System", $link="https://github.com/plantu
 
 }
 
-
-
 Rel(user, web_app, "")
 Rel(admin, web_app, "")
 Rel(support, web_app, "")
@@ -71,13 +67,11 @@ Rel(mobile_app, api_gateway_mob, "")
 
 Rel(device_service, device_service_ext, "REST API")
 
-
 ' API Gateway x Services
 Rel(api_gateway_mob, device_service, "REST API")
 Rel(api_gateway_mob, heating_service, "REST API")
 Rel(api_gateway_mob, temperature_service, "REST API")
 Rel(api_gateway_mob, user_service, "REST API")
-Rel(api_gateway_mob, admin_service, "REST API")
 Rel(api_gateway_mob, light_service, "REST API")
 Rel(api_gateway_mob, gate_service, "REST API")
 Rel(api_gateway_mob, video_service, "REST API")
@@ -89,14 +83,12 @@ Rel(api_gateway_web, device_service, "REST API")
 Rel(api_gateway_web, heating_service, "REST API")
 Rel(api_gateway_web, temperature_service, "REST API")
 Rel(api_gateway_web, user_service, "REST API")
-Rel(api_gateway_web, admin_service, "REST API")
 Rel(api_gateway_web, light_service, "REST API")
 Rel(api_gateway_web, gate_service, "REST API")
 Rel(api_gateway_web, video_service, "REST API")
 Rel(api_gateway_web, monitoring_service, "REST API")
 Rel(api_gateway_web, auth_service, "REST API")
 Rel(api_gateway_web, notification_service, "REST API")
-
 
 ' Kafka
 Rel(device_service, kafka_service, "Публикует события по оборудованию")
@@ -108,7 +100,6 @@ Rel(monitoring_service, kafka_service, "Подписывается на собы
 Rel(notification_service, kafka_service, "Подписывается на события")
 Rel(kafka_service, notification_service, "Публикует события")
 
-
 ' Services x DB
 Rel(device_service, device_service_db, "Чтение\Запись")
 Rel(heating_service, heating_service_db, "Чтение\Запись")
@@ -118,8 +109,11 @@ Rel(gate_service, gate_service_db,"Чтение\Запись")
 Rel(video_service, video_service_db, "Чтение\Запись")
 Rel(notification_service, notification_service_db, "Чтение\Запись")
 Rel(user_service, user_service_db, "Чтение\Запись")
-Rel(admin_service, user_service_db, "Чтение\Запись")
 Rel(auth_service, user_service_db, "Чтение\Запись")
+
+Rel(monitoring_service, user, "Показ данных по мониторингу")
+Rel(monitoring_service, admin, "Показ данных по мониторингу")
+Rel(monitoring_service, support, "Показ данных по мониторингу")
 
 
 SHOW_LEGEND()
