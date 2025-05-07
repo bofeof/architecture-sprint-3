@@ -85,6 +85,7 @@
 
 **AS-IS**
 * [Схема C4 Context UML AS-IS](./diagrams/Context/C4_Context_Smarthome_AS-IS.puml)
+
 ![image info](./diagrams/Context/C4_Context_Smarthome_AS-IS.svg)
 ---
 **TO-BE**
@@ -115,7 +116,6 @@
 
 **Диаграмма контейнеров (Containers)**
 
-TO-BE
 * [Схема C4 Containers UML](./diagrams/Container/C4_Container_Smarthome.puml)
 ![image info](./diagrams/Container/C4_Container_Smarthome.svg)
 
@@ -126,9 +126,12 @@ TO-BE
 
 
 
-**Диаграмма кода (Code)**
+**Диаграмма кода или последовательности (Code \ Sequence )**
 
-Добавьте одну диаграмму или несколько.
+Пример диаграммы последовательности для регистрации оборудования
+* [Схема C4 Sequence UML](./diagrams/Code/C4_Seq_Smarthome_Devices.puml)
+![image info](./diagrams/Code/C4_Sequence_Diagram_Registrating_Device.svg)
+
 
 # Задание 3. Разработка ER-диаграммы
 
