@@ -1,0 +1,131 @@
+openapi: 3.0.3
+info:
+  title: Heating System API
+  description: API для управления системой отопления и температурой умного дома
+  version: 1.0.0
+
+paths:
+  /api/heating/{id}:
+    get:
+      summary: Получить информацию о системе отопления
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Идентификатор системы отопления
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HeatingSystemDto'
+    put:
+      summary: Обновить систему отопления
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HeatingSystemDto'
+      responses:
+        '200':
+          description: Обновлено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HeatingSystemDto'
+
+  /api/heating/{id}/turn-on:
+    post:
+      summary: Включить систему отопления
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Система включена
+
+  /api/heating/{id}/turn-off:
+    post:
+      summary: Выключить систему отопления
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Система выключена
+
+  /api/heating/{id}/set-temperature:
+    post:
+      summary: Установить целевую температуру
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: temperature
+          required: true
+          schema:
+            type: number
+            format: double
+      responses:
+        '204':
+          description: Температура установлена
+
+  /api/heating/{id}/current-temperature:
+    get:
+      summary: Получить текущую температуру
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Текущая температура
+          content:
+            application/json:
+              schema:
+                type: number
+                format: double
+
+components:
+  schemas:
+    HeatingSystemDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        status:
+          type: string
+          enum: [ON, OFF]
+        targetTemperature:
+          type: number
+          format: double
+        currentTemperature:
+          type: number
+          format: double
+      required:
+        - id
+        - name
+        - status

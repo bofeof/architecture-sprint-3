@@ -71,7 +71,7 @@ package "Дом" {
 
 
 package "Оборудование" {
-' devices
+
     entity Device << (T, #FFAAAA) >> {
         primaryKey(id) : Long
         --
@@ -86,8 +86,6 @@ package "Оборудование" {
         primaryKey(id) : Long
         --
         foreignKey(device_id): Long
-        target_temperature : Double
-        current_temperature : Double
         is_on : Boolean
         status: String
         notification: String
@@ -107,6 +105,17 @@ package "Оборудование" {
         --
         foreignKey(device_id): Long
         is_lock : Bool
+        status: String
+        notification: String
+    }
+
+    entity Temperature << (T, #FFAAAA) >> {
+        primaryKey(id) : Long
+        --
+        foreignKey(device_id): Long
+        foreignKey(heating_system_id): Long
+        target_temperature : Double
+        current_temperature : Double
         status: String
         notification: String
     }
@@ -171,6 +180,8 @@ Device ||--|| Light : device_id
 Device ||--|| Gate : device_id
 Device ||--|| Camera : device_id
 Camera ||--o{ VideoArchive : запись
+
+HeatingSystem ||--o{ Temperature: датчик температуры оборудования
 
 Device ||--o{ Notification : отправляет уведомления
 
