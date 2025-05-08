@@ -1,85 +1,145 @@
-# Базовая настройка
+# Описание решения умного дома
 
-## Запуск minikube
+Основная информация, схемы, диаграммы представлены в папке ./docs
 
-[Инструкция по установке](https://minikube.sigs.k8s.io/docs/start/)
+# Задание 1. Анализ и планирование
 
-```bash
-minikube start
-```
+### 1. Описание функциональности монолитного приложения
 
-## Добавление токена авторизации GitHub
+Согласно текущему решению, приложение включает в себя следующие функциональные блоки:
 
-[Получение токена](https://github.com/settings/tokens/new)
+**Управление отоплением:**
 
-```bash
-kubectl create secret docker-registry ghcr --docker-server=https://ghcr.io --docker-username=<github_username> --docker-password=<github_token> -n default
-```
+- **Пользователи** могут удаленно включать/выключать отопление в своих домах.
+- **Система** поддерживает функционал обработки команд от пользователя на включение и выключение отопления через веб-интерфейс.
 
-## Установка API GW kusk
+**Актуальные API методы**
+| Метод    | Эндпойнт | Описание |
+| -------- | -------  |-------  |
+|GET | /api/heating/{id}| Fetching heating system with id {} |
+|PUT | /api/heating/{id}| Updating heating system with id {} |
+|POST | /{id}/turn-on | Turning on heating system with id {} |
+|POST | /{id}/turn-off| Turning off heating system with id {} |
 
-[Install Kusk CLI](https://docs.kusk.io/getting-started/install-kusk-cli)
 
-```bash
-kusk cluster install
-```
+**Мониторинг температуры:**
 
-## Смена адреса образа в helm chart
+- **Пользователи** могут просматривать текущую температуру в своих домах через веб-интерфейс, устанавливать температуру.
+- **Система** получает данные о температуре с датчиков, установленных в домах
 
-После того как вы сделали форк репозитория и у вас в репозитории отработал GitHub Action. Вам нужно получить адрес образа <https://github.com/><github_username>/architecture-sprint-3/pkgs/container/architecture-sprint-3
+**Актуальные API методы**
+| Метод    | Эндпойнт | Описание |
+| -------- | -------  |-------  |
+|POST | /{id}/set-temperature| Setting target temperature to {} for heating system with id {} |
+|GET | /{id}/current-temperature | Fetching current temperature for heating system with id {} |
 
-Он выглядит таким образом
-```ghcr.io/<github_username>/architecture-sprint-3:latest```
 
-Замените адрес образа в файле `helm/smart-home-monolith/values.yaml` на полученный файл:
+### 2. Анализ архитектуры монолитного приложения
 
-```yaml
-image:
-  repository: ghcr.io/<github_username>/architecture-sprint-3
-  tag: latest
-```
+* Язык программирования: Java
+* База данных: PostgreSQL
+* Архитектура: монолитная, все компоненты системы (обработка запросов, бизнес-логика, работа с данными) находятся в рамках одного приложения.
+* Взаимодействие: синхронное через REST API, запросы обрабатываются последовательно.
+* Масштабируемость: ограничена, монолит масштабирует приложение полностью и сразу.
+* Развертывание: требует остановки всего приложения.
 
-## Настройка terraform
 
-[Установите Terraform](https://yandex.cloud/ru/docs/tutorials/infrastructure-management/terraform-quickstart#install-terraform)
+### 3. Определение доменов и границы контекстов (Domain, Bounded Context)
 
-Создайте файл ~/.terraformrc
+Опираясь на текущее решение и целевую модель, по DDD можно выделить следующие домены (domain) и границы контекстов (bounded context):
 
-```hcl
-provider_installation {
-  network_mirror {
-    url = "https://terraform-mirror.yandexcloud.net/"
-    include = ["registry.terraform.io/*/*"]
-  }
-  direct {
-    exclude = ["registry.terraform.io/*/*"]
-  }
-}
-```
+| Домен    | Контекст |
+| -------- | -------  |
+| Управление устройствами и интеграциями  | <ul><li>Регистрация устройства</li><li>Подключение и настройка устройства</li><li>Мониторинг устройств</li></ul>   |
+| Управление Отоплением | <ul><li>Включение и выключение отопления</li><li>Мониторинг отопления</li></ul>    |
+| Управление Температурой  |  <ul><li>Регулирование температуры</li><li>Мониторинг температуры</li></ul>    |
+| Управление Пользователем |  <ul><li>Создание пользователя, администратора</li><li>Авторизация и аутентификация</li><li>Настройка ролей и доступов</li></ul>  |
+| Управление Светом  |  <ul><li>Включение и выключение света</li><li>Мониторинг электричества</li></ul>    |
+| Управление Воротами  |  <ul><li>Открытие и закрытие ворот</li></ul>    |
+| Управление Видеонаблюдением  |  <ul><li>Управление видеонаблюдением</li></ul>    |
 
-## Применяем terraform конфигурацию
 
-```bash
-cd terraform
-terraform init
-terraform apply
-```
+### **4. Проблемы монолитного решения**
+Текущее монолитное решение и его трудности: 
 
-## Настройка API GW
+* **Высокий риск ошибок и сильная связанность компонентов**.
+    - Изменения в одной части приложения могут непредсказуемо влиять на другие части
+    - Ошибки могут полностью остановить работу прилоежния. Критично для SaaS.
 
-```bash
-kusk deploy -i api.yaml
-```
+* **Длительные циклы разработки и развертывания**
+    - При каждом изменении приходится тестировать все приложение целиком. Это замедляет выпуск новых функций
+    - Обновление компонентов и доставка нового функционала влечет за собой остановку приложения до полного обновления, может быть критично для SaaS.
+    - Добавление нового функционала может потребовать серьезных правок в нескольких частях монолитного приложения
+    - В монолите сложно выстроить автоматизированный CI\CD
 
-## Проверяем работоспособность
+* **Трудно масштабировать отдельные компоненты системы**
+    - С монолитной архитектурой не получится масштабировать только одну часть приложения — придется масштабировать приложение целиком.
+    - Масштабирование монолита — большая проблема, когда вырастет количество клиентов, а у компании будут ограниченные ресурсы для расширения.
 
-```bash
-kubectl port-forward svc/kusk-gateway-envoy-fleet -n kusk-system 8080:80
-curl localhost:8080/hello
-```
+* **Синхронное взаимодействие**
 
-## Delete minikube
 
-```bash
-minikube delete
-```
+### 5. Визуализация контекста системы — диаграмма С4
+
+Диаграмма контекста с учетом текущего функционала: централизованное управление отоплением и температурой
+
+
+**AS-IS**
+* [Схема C4 Context UML AS-IS](./diagrams/Context/C4_Context_Smarthome_AS-IS.puml)
+
+![image info](./diagrams/Context/C4_Context_Smarthome_AS-IS.svg)
+---
+**TO-BE**
+* [Схема C4 Context UML AS-IS](./diagrams/Context/C4_Context_Smarthome_TO-BE.puml)
+
+![image info](./diagrams/Context/C4_Context_Smarthome_TO-BE.svg)
+
+
+
+# Задание 2. Проектирование микросервисной архитектуры
+
+Микросервисы и зона ответственности 
+| Микросервис    | Описание |
+| -------- | -------  |
+|DeviceService | Управление оборудованием: донастройка, регистрация, удаление, подключение  |
+|HeatingService | Управление отоплением |
+|TemperatureService | Управление температурой |
+|UserService | Управление пользователем, администратором |
+|LightService | Управление светом |
+|GateService| Управление воротами и дверями |
+|VideoService| Управление видеонаблюдением |
+|MonitoringService|Мониторинг, сбор метрик, логов|
+|AuthService|Авторизация и аутентификация|
+|API Gateway|Точка входа для клиентских запросов. Предлагается сделать два gateway: для веб и моб. версии|
+|NotificationService|Управление уведомлениями|
+
+----- 
+
+**Диаграмма контейнеров (Containers)**
+
+* [Схема C4 Containers UML](./diagrams/Container/C4_Container_Smarthome.puml)
+![image info](./diagrams/Container/C4_Container_Smarthome.svg)
+
+
+**Диаграмма компонентов (Components)**
+* [Схема C4 Components UML](./diagrams/Component/C4_Component_Smarthome.puml)
+![image info](./diagrams/Component/C4_Component_Smarthome.svg)
+
+
+**Диаграмма кода или последовательности (Code \ Sequence )**
+
+Пример диаграммы последовательности для регистрации оборудования
+* [Схема C4 Sequence UML](./diagrams/Code/C4_Seq_Smarthome_Devices.puml)
+![image info](./diagrams/Code/C4_Sequence_Diagram_Registrating_Device.svg)
+
+
+# Задание 3. Разработка ER-диаграммы
+
+Диаграмма основных сущностей микросервисов
+* [ER UML](./diagrams/ER/ER.puml)
+![image info](./diagrams/ER/ER_Smarthome.svg)
+
+
+#  Задание 4. Создание и документирование API
+Описание текущих методов в монолитном решении c помощью OpenApi:
+* [OpenAPI spec](./API/API.yaml)
