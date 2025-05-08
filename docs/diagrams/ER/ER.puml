@@ -1,0 +1,192 @@
+@startuml ER_Smarthome
+
+skinparam nodesep 100
+skinparam ranksep 100
+
+skinparam linetype ortho
+
+!define primaryKey(x) <b>PK: x</b>
+!define foreignKey(x) <b><i>FK: x</i></b>
+
+package "Пользователь" {
+    entity User << (T, #FFAAAA) >> {
+        primaryKey(id): Long
+        --
+        email: String
+        password_hash: String
+        created_at : Timestamp
+    }
+
+    entity UserInformation << (T, #FFAAAA) >> {
+        primaryKey(id): Long
+        --
+        foreignKey(user_id): Long
+        first_name: String
+        last_name: String
+        address: String
+        additional_info: JSON
+    }
+
+    entity UserRole << (T, #FFAAAA) >> {
+        primaryKey(id): Long
+        --
+        foreignKey(user_id): Long
+        role: String
+        subrole: String
+        role_settings: JSON
+    }
+
+    entity UserSettings << (T, #FFAAAA) >> {
+        primaryKey(id): Long
+        --
+        foreignKey(user_id): Long
+        language : String
+        notification_enabled : Boolean
+        theme : String
+        rule: String
+    }
+}
+
+package "Дом" {
+    ' user house(houses)
+    entity House << (T, #FFAAAA) >> {
+        primaryKey(id) : Long
+        --
+        foreignKey(user_id) : Long
+    }
+
+    entity Room << (T, #FFAAAA) >> {
+        primaryKey(id) : Long
+        --
+        foreignKey(house_id) : Long
+    }
+
+    entity RoomDevice << (T, #FFAAAA) >> {
+        primaryKey(id) : Long
+        --
+        foreignKey(room_id) : Long
+        foreignKey(device_id) : Long
+    }  
+}
+
+
+package "Оборудование" {
+
+    entity Device << (T, #FFAAAA) >> {
+        primaryKey(id) : Long
+        --
+        foreignKey(user_id): Long
+        name : String
+        device_serial_code: String
+        registration_date: Timestamp 
+    }
+
+
+    entity HeatingSystem << (T, #FFAAAA) >> {
+        primaryKey(id) : Long
+        --
+        foreignKey(device_id): Long
+        is_on : Boolean
+        status: String
+        notification: String
+    }
+
+    entity Light << (T, #FFAAAA) >> {
+        primaryKey(id) : Long
+        --
+        foreignKey(device_id): Long
+        is_on : Boolean
+        status: String
+        notification: String
+    }
+
+    entity Gate << (T, #FFAAAA) >> {
+        primaryKey(id) : Long
+        --
+        foreignKey(device_id): Long
+        is_lock : Bool
+        status: String
+        notification: String
+    }
+
+    entity Temperature << (T, #FFAAAA) >> {
+        primaryKey(id) : Long
+        --
+        foreignKey(device_id): Long
+        foreignKey(heating_system_id): Long
+        target_temperature : Double
+        current_temperature : Double
+        status: String
+        notification: String
+    }
+
+    entity Camera << (T, #FFAAAA) >> {
+        primaryKey(id) : Long
+        --
+        foreignKey(device_id): Long
+        is_recording : Boolean
+        status: String
+        notification: String
+    }
+
+    entity VideoArchive << (T, #FFAAAA) >> {
+        primaryKey(id) : Long
+        --
+        foreignKey(device_id): Long
+        foreignKey(camera_id): Long
+        recorded_at: Timestamp
+        file_path: string
+    }
+}
+
+
+entity Notification << (T, #FFAAAA) >> {
+    primaryKey(id) : Long
+    --
+    foreignKey(user_id) : Long
+    foreignKey(device_id): Long
+    type : String
+    status : String
+    message : String
+    sent_at : Timestamp
+    created_at : Timestamp
+}
+
+entity EventLog << (T, #FFAAAA) >> {
+    primaryKey(id) : Long
+    --
+    foreignKey(user_id): Long
+    foreignKey(device_id): Long
+    foreignKey(notification_id): Long
+    source : String
+    type : String
+    payload : String
+    created_at : Timestamp
+}
+
+
+User ||--|| UserInformation
+User ||--o{ UserRole: роли
+User ||--o{ UserSettings : устанавливает настройки
+User ||--o{ Notification : получает уведомления
+User ||--o{ House : владеет
+User ||--o{ Device: владеет
+House ||--o{ Room : владеет
+Room ||--o{ RoomDevice
+Device ||--o{ RoomDevice
+
+Device ||--|| HeatingSystem : device_id
+Device ||--|| Light : device_id
+Device ||--|| Gate : device_id
+Device ||--|| Camera : device_id
+Camera ||--o{ VideoArchive : запись
+
+HeatingSystem ||--o{ Temperature: датчик температуры оборудования
+
+Device ||--o{ Notification : отправляет уведомления
+
+User ||--o{ EventLog : инициирует события
+Device ||--o{ EventLog : инициирует события
+Notification ||--o{ EventLog : связь с оповещением
+
+@enduml

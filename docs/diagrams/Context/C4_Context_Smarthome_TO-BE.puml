@@ -1,0 +1,34 @@
+@startuml C4_Context_Smarthome_TO-BE
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Диаграмма контекста TO-BE. Добавлены пользователи и новые системы (1-й уровень)
+
+Person(user, "User", "Пользователь(-и) системы")
+Person(admin, "Admin", "Администратор системы")
+Person_Ext(support, "Support Service", "Служба поддержки")
+
+System(monoApp, "App SmartHome", "Приложение для управления умным домом")
+
+System_Ext(heatSys, "Heat system", "Система управления отоплением")
+System_Ext(lightSys, "Light system", "Система управления светом")
+System_Ext(temperatureSys, "Temperature system", "Система управления температурой")
+System_Ext(gateSys, "Gate system", "Система управления воротами и дверями")
+System_Ext(videoSys, "Video system", "Система видеонаблюдения")
+System_Ext(deviceSys, "Device system", "Система управления оборудованием")
+
+Rel(user, monoApp, "Управляет отоплением, температурой светом, воротами", "REST API [HTTPS]")
+Rel(admin, monoApp, "Управляет настройкой оборудования, пользователями системы", "REST API [HTTPS]")
+Rel(support, monoApp, "Техническая поддержка приложения", "Внешний доступ со стороны обслуживающей компании")
+
+Rel(monoApp, heatSys , "Включение и отключение отопления", "REST API [HTTPS]")
+Rel(monoApp, lightSys, "Включение и отключение света", "REST API [HTTPS]")
+Rel(monoApp, temperatureSys, "Проверка и управление температурой", "REST API [HTTPS]")
+Rel(monoApp, gateSys, "Открытие и закрытие дверей\ворот", "REST API [HTTPS]")
+Rel(monoApp, videoSys, "Управление видеонаблюдением", "REST API [HTTPS]")
+Rel(monoApp, deviceSys, "Управление оборудованием", "REST API [HTTPS]")
+
+
+LAYOUT_WITH_LEGEND()
+SHOW_LEGEND()
+
+@enduml

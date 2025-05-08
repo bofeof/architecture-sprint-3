@@ -1,0 +1,373 @@
+@startuml C4_Component_Smarthome
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+!define FONTAWESOME https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/font-awesome-5
+!include FONTAWESOME/users.puml
+!include FONTAWESOME/robot.puml
+
+title Диаграмма контейнеров (3-й уровень)
+
+skinparam nodesep 150
+skinparam ranksep 200
+
+LAYOUT_TOP_DOWN()
+LAYOUT_WITH_LEGEND()
+
+
+Person(user, "User", "Пользователь(-и) системы", $sprite="users")
+System_Ext(iot, "IoT Device", "Оборудование умного дома", $sprite="robot")
+Boundary(company, "Компания Smart Home"){
+    System_Ext(device_service_ext, "Device registration service", "Внешний сервис провайдера для проверки оборудования")
+}
+
+
+System_Boundary(smartHome, "Smart Home System") {
+    
+    ' Apps
+    Container(app, "App (mobile\SPA\Web)",  "", "Веб-приложение\Мобильное приложение")
+
+    ' Gateway
+    Container(api_gateway, "API Gateway / BFF", "Kong", "Точка входа для клиентов")
+
+    ' управление оборудованием 
+    System_Boundary(device_service, "Device Service") {
+        
+        Container(device_api_controller, "API Controller", "REST Controller", "Принимает и обрабатывает API запросы с Gateway")
+        Container(device_registration_controller, "Registration Controller", "REST Controller", "Обрабатывает регистрацию оборудования")
+        Container(device_controller, "Device Controller", "REST Controller", "Работает с устройствами (удаление, список и т.д.)")
+        Container(device_monitoring_controller, "Monitoring Controller", "REST Controller", "Принимает метрики и статус")
+        
+        ' Container(device_auth_service, "Auth Service", "Keycloak / OAuth2", "Проверяет токены и выдает информацию о пользователе")
+        Container(device_registration_service, "Registration Service", "Java", "Бизнес-логика регистрации устройств")
+        Container(device_service_business_logic, "Device Service", "Java", "Бизнес-логика управления устройствами")
+        Container(device_monitoring_service, "Monitoring Service", "Java", "Обработка статусов и метрик")
+        Container(device_kafka_publisher, "Kafka Publisher Service", "Java", "Публикует события в Kafka")
+        
+        SystemDb(device_service_db, "Device Service DB",  "PostgreSQL", "БД для оборудования")
+
+        Rel(device_api_controller, device_controller, "Маршрутизация запроса устройства")
+        ' Rel(device_api_controller, device_auth_service, "Проверка токена и ролей", "OAuth2 / JWT")
+        Rel(device_api_controller, device_registration_controller, "Маршрутизация запроса регистрации")
+        Rel(device_api_controller, device_monitoring_controller, "Маршрутизация запроса метрик")
+        Rel(device_registration_controller, device_service_ext, "Проверка оборудования на внешнем сервере регистрации", "HTTPS")
+        
+        Rel(device_registration_controller, device_registration_service, "Вызов бизнес-логики")
+        Rel(device_controller, device_service_business_logic, "Вызов бизнес-логики")
+        Rel(device_monitoring_controller, device_monitoring_service, "Вызов бизнес-логики")
+        Rel(device_registration_service, device_service_db, "Сохраняет новое устройство")
+        Rel(device_service_business_logic, device_service_db, "Читает / удаляет устройство")
+        Rel(device_monitoring_service, device_service_db, "Сохраняет статус устройства")
+        Rel(device_registration_service, device_kafka_publisher, "Отправляет событие регистрации")
+        Rel(device_service_business_logic, device_kafka_publisher, "Отправляет событие удаления")
+        Rel(device_monitoring_service, device_kafka_publisher, "Отправляет событие метрики")
+
+    }
+
+    ' управление отоплением
+    System_Boundary(heating_service, "Heating Service") {
+
+            Container(heating_api_controller, "API Controller", "REST Controller", "Принимает и обрабатывает API-запросы с Gateway")
+            ' Container(heating_auth_service, "Auth Service", "Keycloak / OAuth2", "Проверяет токены и права пользователя")
+            Container(heating_controller, "Heating Controller", "REST Controller", "Управляет включением / выключением отопления")
+            Container(heating_settings_controller, "Settings Controller", "REST Controller", "Обрабатывает настройки отопления (графики, температуры и т.д.)")
+            Container(heating_monitoring_controller, "Monitoring Controller", "REST Controller", "Получает и обрабатывает метрики от оборудования")
+            Container(heating_service_business_logic, "Heating Service", "Java", "Бизнес-логика включения / выключения отопления")
+            Container(heating_settings_service, "Heating Settings Service", "Java", "Бизнес-логика управления параметрами отопления")
+            Container(heating_monitoring_service, "Monitoring Service", "Java", "Обработка метрик отопления")
+            Container(heating_kafka_publisher, "Kafka Publisher Service", "Java", "Публикует события в Kafka")
+            
+            SystemDb(heating_service_db, "Heating Service DB", "PostgreSQL", "БД для отопления (состояния, параметры, метрики)")
+
+            ' Rel(heating_api_controller, heating_auth_service, "Проверка токена и ролей", "OAuth2 / JWT")
+            Rel(heating_api_controller, heating_controller, "Маршрутизация включения/выключения")
+            Rel(heating_api_controller, heating_settings_controller, "Маршрутизация управления параметрами")
+            Rel(heating_api_controller, heating_monitoring_controller, "Маршрутизация получения метрик")
+
+            Rel(heating_controller, heating_service_business_logic, "Вызов бизнес-логики")
+            Rel(heating_settings_controller, heating_settings_service, "Вызов бизнес-логики")
+            Rel(heating_monitoring_controller, heating_monitoring_service, "Вызов бизнес-логики")
+
+            Rel(heating_service_business_logic, heating_service_db, "Обновляет состояние отопления")
+            Rel(heating_settings_service, heating_service_db, "Сохраняет параметры отопления")
+            Rel(heating_monitoring_service, heating_service_db, "Сохраняет метрики отопления")
+
+            Rel(heating_service_business_logic, heating_kafka_publisher, "Публикует событие изменения состояния")
+            Rel(heating_settings_service, heating_kafka_publisher, "Публикует событие изменения настроек")
+            Rel(heating_monitoring_service, heating_kafka_publisher, "Публикует событие метрик")
+    }
+
+    ' управление температурой
+    System_Boundary(temperature_service, "Temperature Service") {
+        
+        Container(temperature_api_controller, "API Controller", "REST Controller", "Принимает и обрабатывает API-запросы с Gateway")
+        ' Container(temperature_auth_service, "Auth Service", "Keycloak / OAuth2", "Проверяет токены и роли пользователя")
+        Container(temperature_controller, "Temperature Controller", "REST Controller", "Управляет настройкой и чтением температуры")
+        Container(temperature_monitoring_controller, "Monitoring Controller", "REST Controller", "Обрабатывает метрики температуры от оборудования")
+        
+        Container(temperature_service_business_logic, "Temperature Service", "Java", "Бизнес-логика управления температурой")
+        Container(temperature_monitoring_service, "Monitoring Service", "Java", "Обработка метрик температуры")
+        Container(temperature_kafka_publisher, "Kafka Publisher Service", "Java", "Публикует события в Kafka")
+        
+        SystemDb(temperature_service_db, "Temperature Service DB", "PostgreSQL", "БД для температуры (текущие данные, настройки, история)")
+
+        ' Rel(temperature_api_controller, temperature_auth_service, "Проверка токена и ролей", "OAuth2 / JWT")
+        Rel(temperature_api_controller, temperature_controller, "Маршрутизация запросов температуры")
+        Rel(temperature_api_controller, temperature_monitoring_controller, "Маршрутизация метрик")
+
+        Rel(temperature_controller, temperature_service_business_logic, "Вызов бизнес-логики")
+        Rel(temperature_monitoring_controller, temperature_monitoring_service, "Вызов бизнес-логики")
+
+        Rel(temperature_service_business_logic, temperature_service_db, "Сохраняет / читает настройки и значения")
+        Rel(temperature_monitoring_service, temperature_service_db, "Сохраняет метрики")
+
+        Rel(temperature_service_business_logic, temperature_kafka_publisher, "Публикует событие изменения")
+        Rel(temperature_monitoring_service, temperature_kafka_publisher, "Публикует событие метрики")
+
+    }
+
+    ' пользователи, админы
+    System_Boundary(user_service, "User Service") {
+        
+        Container(user_api_controller, "API Controller", "REST Controller", "Принимает и обрабатывает API-запросы с Gateway")
+        ' Container(user_auth_service, "Auth Service", "Keycloak / OAuth2", "Проверяет токены и роли пользователя")
+        Container(user_registration_controller, "Registration Controller", "REST Controller", "Обрабатывает регистрацию новых пользователей")
+        Container(user_profile_controller, "Profile Controller", "REST Controller", "Позволяет просматривать и редактировать профиль пользователя")
+        Container(user_role_controller, "Role Controller", "REST Controller", "Управляет ролями и правами доступа")
+        
+        Container(user_service_business_logic, "User Service", "Java", "Бизнес-логика управления пользователями и ролями")
+        Container(user_kafka_publisher, "Kafka Publisher Service", "Java", "Публикует события в Kafka")
+        
+        SystemDb(user_service_db, "User Service DB", "PostgreSQL", "БД для хранения пользователей, ролей и профилей")
+
+        ' Rel(user_api_controller, user_auth_service, "Проверка токена и ролей", "OAuth2 / JWT")
+        Rel(user_api_controller, user_registration_controller, "Маршрутизация запроса регистрации")
+        Rel(user_api_controller, user_profile_controller, "Маршрутизация запросов профиля")
+        Rel(user_api_controller, user_role_controller, "Маршрутизация запросов ролей")
+
+        Rel(user_registration_controller, user_service_business_logic, "Вызов бизнес-логики регистрации")
+        Rel(user_profile_controller, user_service_business_logic, "Вызов бизнес-логики редактирования")
+        Rel(user_role_controller, user_service_business_logic, "Вызов бизнес-логики ролей")
+
+        Rel(user_service_business_logic, user_service_db, "Сохраняет / читает данные пользователей и ролей")
+
+        Rel(user_service_business_logic, user_kafka_publisher, "Публикует событие регистрации / изменения / ролей")
+    }
+
+    ' управление освещением
+    System_Boundary(light_service, "Light Service") {
+
+        Container(light_api_controller, "API Controller", "REST Controller", "Принимает и обрабатывает API-запросы с Gateway")
+        ' Container(light_auth_service, "Auth Service", "Keycloak / OAuth2", "Проверяет токены и роли пользователя")
+
+        Container(light_controller, "Light Controller", "REST Controller", "Обрабатывает команды включения / выключения света")
+        Container(light_monitoring_controller, "Monitoring Controller", "REST Controller", "Обрабатывает метрики от устройств освещения")
+
+        Container(light_service_business_logic, "Light Service", "Java", "Бизнес-логика управления освещением")
+        Container(light_monitoring_service, "Monitoring Service", "Java", "Обработка метрик освещения")
+
+        Container(light_kafka_publisher, "Kafka Publisher Service", "Java", "Публикует события в Kafka")
+
+        Container(iot_device, "IoT Device", "MQTT / HTTP", "Физическое устройство освещения")
+
+        SystemDb(light_service_db, "Light Service DB", "PostgreSQL", "БД для состояния и метрик освещения")
+
+        ' Rel(light_api_controller, light_auth_service, "Проверка токена и ролей", "OAuth2 / JWT")
+        Rel(light_api_controller, light_controller, "Маршрутизация команд включения / выключения")
+        Rel(light_api_controller, light_monitoring_controller, "Маршрутизация метрик")
+
+        Rel(light_controller, light_service_business_logic, "Вызов бизнес-логики")
+        Rel(light_monitoring_controller, light_monitoring_service, "Вызов бизнес-логики")
+
+        Rel(light_service_business_logic, light_service_db, "Обновляет состояние освещения")
+        Rel(light_monitoring_service, light_service_db, "Сохраняет метрики освещения")
+
+        Rel(light_service_business_logic, light_kafka_publisher, "Публикует событие изменения освещения")
+        Rel(light_monitoring_service, light_kafka_publisher, "Публикует событие метрик")
+
+        Rel(light_service_business_logic, iot_device, "Отправляет команду управления освещением", "MQTT / HTTP")
+    }
+
+
+    ' управление воротами
+    System_Boundary(gate_service, "Gate Service") {
+
+        Container(gate_api_controller, "API Controller", "REST Controller", "Принимает и обрабатывает API-запросы с Gateway")
+        ' Container(gate_auth_service, "Auth Service", "Keycloak / OAuth2", "Проверяет токены и роли пользователя")
+        
+        Container(gate_controller, "Gate Controller", "REST Controller", "Обрабатывает команды открытия / закрытия")
+        Container(gate_monitoring_controller, "Monitoring Controller", "REST Controller", "Получает и обрабатывает метрики от устройств управления воротами")
+
+        Container(gate_service_business_logic, "Gate Service", "Java", "Бизнес-логика управления воротами и дверьми")
+        Container(gate_monitoring_service, "Monitoring Service", "Java", "Обработка метрик устройств управления")
+
+        Container(gate_kafka_publisher, "Kafka Publisher Service", "Java", "Публикует события в Kafka")
+
+        SystemDb(gate_service_db, "Gate Service DB", "PostgreSQL", "БД состояния и метрик ворот / дверей")
+
+        ' Rel(gate_api_controller, gate_auth_service, "Проверка токена и ролей", "OAuth2 / JWT")
+        Rel(gate_api_controller, gate_controller, "Маршрутизация команд открытия / закрытия")
+        Rel(gate_api_controller, gate_monitoring_controller, "Маршрутизация мониторинга")
+
+        Rel(gate_controller, gate_service_business_logic, "Вызов бизнес-логики")
+        Rel(gate_monitoring_controller, gate_monitoring_service, "Обработка метрик")
+
+        Rel(gate_service_business_logic, gate_service_db, "Обновляет состояние")
+        Rel(gate_monitoring_service, gate_service_db, "Сохраняет метрики")
+
+        Rel(gate_service_business_logic, gate_kafka_publisher, "Публикует событие открытия / закрытия")
+        Rel(gate_monitoring_service, gate_kafka_publisher, "Публикует событие метрик")
+    }
+
+
+    ' управление видеонаблюдением
+    System_Boundary(video_service, "Video Service") {
+
+        Container(video_api_controller, "API Controller", "REST Controller", "Обрабатывает API-запросы от клиентов")
+        ' Container(video_auth_service, "Auth Service", "Keycloak / OAuth2", "Проверяет токены и роли пользователя")
+        
+        Container(video_stream_controller, "Stream Controller", "REST Controller", "Обрабатывает запросы на просмотр видеопотока")
+        Container(video_recordings_controller, "Recordings Controller", "REST Controller", "Обрабатывает запросы на просмотр архива")
+        Container(video_monitoring_controller, "Monitoring Controller", "REST Controller", "Обрабатывает метрики с видеосистем")
+
+        Container(video_stream_service, "Video Stream Service", "Java / WebRTC", "Управление текущими видеопотоками с камер")
+        Container(video_recording_service, "Recording Service", "Java", "Управление архивными записями")
+        Container(video_monitoring_service, "Monitoring Service", "Java", "Обработка метрик видеонаблюдения")
+
+        Container(video_kafka_publisher, "Kafka Publisher Service", "Java", "Публикует события видеонаблюдения")
+
+        SystemDb(video_service_db, "Video Service DB", "TimescaleDB", "Хранение записей, метаданных и метрик видеонаблюдения")
+
+        ' Rel(video_api_controller, video_auth_service, "Проверка токена и ролей", "OAuth2 / JWT")
+        Rel(video_api_controller, video_stream_controller, "Маршрутизация потоков")
+        Rel(video_api_controller, video_recordings_controller, "Маршрутизация архива")
+        Rel(video_api_controller, video_monitoring_controller, "Маршрутизация метрик")
+
+        Rel(video_stream_controller, video_stream_service, "Обработка потока")
+        Rel(video_recordings_controller, video_recording_service, "Запрос к архиву")
+        Rel(video_monitoring_controller, video_monitoring_service, "Обработка метрик")
+
+        Rel(video_recording_service, video_service_db, "Чтение / сохранение записей")
+        Rel(video_monitoring_service, video_service_db, "Сохраняет метрики")
+        
+        Rel(video_stream_service, video_kafka_publisher, "Публикует событие потока")
+        Rel(video_recording_service, video_kafka_publisher, "Публикует событие архива")
+        Rel(video_monitoring_service, video_kafka_publisher, "Публикует событие метрик")
+    }
+
+
+    ' управление уведомлениями
+    System_Boundary(notification_service, "Notification Service") {
+
+        Container(notification_api_controller, "API Controller", "REST Controller", "Обрабатывает внешние запросы на отправку оповещений")
+        ' Container(notification_auth_service, "Auth Service", "Keycloak / OAuth2", "Проверяет токены и права доступа")
+
+        Container(notification_dispatcher, "Dispatcher Service", "Java", "Формирует и отправляет оповещения (email, push, sms и т.п.)")
+        Container(notification_event_handler, "Event Handler", "Java", "Обрабатывает входящие события из Kafka")
+
+        Container(notification_kafka_publisher, "Kafka Publisher Service", "Java", "Публикует события (доставлено, ошибка и т.п.)")
+
+        SystemDb(notification_service_db, "Notification Service DB", "PostgreSQL", "Хранение логов оповещений и пользовательских настроек")
+
+        ' Rel(notification_api_controller, notification_auth_service, "Проверка токена и ролей", "OAuth2 / JWT")
+        Rel(notification_api_controller, notification_dispatcher, "Передача команды на отправку")
+
+        Rel(notification_dispatcher, notification_service_db, "Сохраняет лог отправки")
+        Rel(notification_event_handler, notification_service_db, "Сохраняет событие")
+        Rel(notification_event_handler, notification_dispatcher, "Вызывает отправку оповещения")
+        
+        Rel(notification_dispatcher, notification_kafka_publisher, "Публикует статус доставки")
+    }
+
+    ' мониторинг
+    System_Boundary(monitoring_service, "Monitoring Service") {
+
+        Container(prometheus, "Prometheus", "Time Series DB", "Сбор и хранение метрик со всех микросервисов и оборудования")
+        Container(grafana, "Grafana", "Dashboard UI", "Визуализация метрик и создание дашбордов")
+        Container(logstash, "Logstash", "Pipeline", "Агрегирует и передает логи из сервисов")
+        Container(elasticsearch, "Elasticsearch", "Search Engine", "Индексирует и хранит логи")
+        Container(kibana, "Kibana", "Dashboard UI", "Анализ и визуализация логов из Elasticsearch")
+
+        Container(monitoring_alert_manager, "AlertManager", "Alerting Service", "Создание и отправка алертов по метрикам и логам")
+
+        Rel(prometheus, monitoring_alert_manager, "Отправляет алерты")
+        Rel(prometheus, grafana, "Источник метрик")
+        Rel(grafana, user, "Просмотр дашбордов", "HTTPS")
+
+        Rel(logstash, elasticsearch, "Передает логи")
+        Rel(kibana, elasticsearch, "Источник логов")
+        Rel(kibana, user, "Просмотр логов", "HTTPS")
+
+        Rel(api_gateway, prometheus, "Отдает метрики", "HTTP / metrics endpoint")
+
+        Rel(device_monitoring_service, prometheus, "Отдает метрики", "HTTP / metrics")
+        Rel(heating_monitoring_service, prometheus, "Отдает метрики", "HTTP / metrics")
+        Rel(temperature_monitoring_service, prometheus, "Отдает метрики", "HTTP / metrics")
+        Rel(video_monitoring_service, prometheus, "Отдает метрики", "HTTP / metrics")
+        Rel(light_monitoring_service, prometheus, "Отдает метрики", "HTTP / metrics")
+        Rel(gate_monitoring_service, prometheus, "Отдает метрики", "HTTP / metrics")
+
+        Rel(device_monitoring_service, logstash, "Отправляет логи", "Log pipeline")
+        Rel(heating_monitoring_service, logstash, "Отправляет логи", "Log pipeline")
+        Rel(temperature_monitoring_service, logstash, "Отправляет логи", "Log pipeline")
+        Rel(video_monitoring_service, logstash, "Отправляет логи", "Log pipeline")
+        Rel(light_monitoring_service, logstash, "Отправляет логи", "Log pipeline")
+        Rel(gate_monitoring_service, logstash, "Отправляет логи", "Log pipeline")
+
+        Rel(monitoring_alert_manager, notification_service, "Отправка алертов через Webhook", "HTTP")
+    }
+
+    ' для упрощения схемы два контейнера не раскрыты
+    Container(auth_service, "Auth Service", "OAuth2 / JWT", "Сервис авторизации и аутентификации")
+    Container(kafka, "Kafka", "Event Streaming", "Брокер для обмена событиями между микросервисами")
+
+}
+
+Rel_D(user, app, "")
+Rel_D(app, api_gateway, "")
+
+' Auth
+Rel(api_gateway, auth_service, , "Авторизация и аутентификация")
+Rel(auth_service, api_gateway, "Выдача токенов")
+
+'IoT x Metrics
+Rel(iot, device_monitoring_controller, "Отправка метрик и статусов", "HTTPS / MQTT")
+Rel(iot, heating_monitoring_controller, "Отправка метрик и статусов", "HTTPS / MQTT")
+Rel(iot, temperature_monitoring_controller, "Отправка метрик температуры", "HTTPS / MQTT")
+Rel(iot, video_monitoring_controller, "Отправка метрик температуры", "HTTPS / MQTT")
+Rel(iot, light_monitoring_controller, "Отправка метрик температуры", "HTTPS / MQTT")
+Rel(iot, gate_monitoring_controller, "Отправка метрик температуры", "HTTPS / MQTT")
+
+' API Gateway x Services
+Rel(api_gateway, device_api_controller, "REST API")
+Rel(api_gateway, heating_api_controller, "REST API")
+Rel(api_gateway, temperature_api_controller, "REST API")
+Rel(api_gateway, user_api_controller, "REST API")
+Rel(api_gateway, light_api_controller, "REST API")
+Rel(api_gateway, gate_api_controller, "REST API")
+Rel(api_gateway, video_api_controller, "REST API")
+Rel(api_gateway, notification_api_controller, "REST API")
+
+
+' Rel(api_gateway, monitoring_service, "REST API")
+' Rel(api_gateway, auth_service, "REST API")
+
+' Kafka
+Rel(device_kafka_publisher, kafka, "Публикует событие", "Kafka consumer")
+Rel(heating_kafka_publisher, kafka, "Публикует событие", "Kafka consumer")
+Rel(temperature_kafka_publisher, kafka, "Публикует событие", "Kafka consumer")
+Rel(user_kafka_publisher, kafka, "Публикует событие", "Kafka consumer")
+Rel(light_kafka_publisher, kafka, "Публикует событие", "Kafka consumer")
+Rel(gate_kafka_publisher, kafka, "Публикует событие", "Kafka consumer")
+
+Rel(video_kafka_publisher, kafka, "Публикует событие", "Kafka consumer")
+Rel(monitoring_service, kafka, "Подписка на события", "Kafka consumer")
+
+Rel(kafka, notification_event_handler, "Подписка на события", "Kafka consumer")
+Rel(notification_kafka_publisher, kafka, "Публикует события", "Kafka producer")
+
+
+SHOW_LEGEND()
+
+@enduml

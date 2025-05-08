@@ -1,0 +1,34 @@
+@startuml C4_Sequence_Diagram_Registrating_Device
+
+actor User
+participant "API Controller" as api
+participant "Registration Controller" as regCtrl
+participant "Registration Service" as regSvc
+participant "External Registration Server" as external
+participant "Device DB" as db
+participant "Kafka Publisher Service" as kafka
+
+== Регистрация устройства ==
+Activate User
+
+User -> api++ : POST /devices/register/{Device}
+api -> regCtrl++ : routeToRegistration(device)
+regCtrl -> external++ : checkDevice(device.serial)
+external --> regCtrl--: boolean (valid)
+alt Регистрация оборудования прошла
+    regCtrl -> regSvc++: registerDevice(device)
+    regSvc -> db++ : saveDevice(device)
+    db --> regSvc--: ok
+    regSvc -> kafka++ : publishRegistrationEvent(deviceId)
+    kafka --> regSvc-- : ack
+    regSvc --> regCtrl-- : RegistrationResult(success)
+    regCtrl --> api : HTTP 200 OK
+    api --> User : OK (device registered)
+else Регистрация оборудования не прошла
+    regCtrl --> api--: HTTP 400 Bad Request
+    api --> User-- : Error (invalid device)
+end
+
+deactivate User
+
+@enduml

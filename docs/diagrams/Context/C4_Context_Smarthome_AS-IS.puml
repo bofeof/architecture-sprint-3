@@ -1,0 +1,20 @@
+@startuml C4_Context_Smarthome_AS-IS
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Диаграмма контекста AS-IS (1-й уровень)
+
+Person(user, "User", "Пользователь(-и) системы")
+
+System(monoApp, "Monolithic App SmartHome", "Монолитное единое приложение для управления умным домом")
+
+System_Ext(heatSys, "Heat system", "Система управления отоплением")
+System_Ext(temperatureSys, "Temperature system", "Система управления температурой")
+
+Rel(user, monoApp, "Управляет отоплением, температурой", "REST API [HTTPS]")
+Rel(monoApp, heatSys , "Включение и отключение отопления", "REST API [HTTPS]")
+Rel(monoApp, temperatureSys, "Проверка и управление температурой", "REST API [HTTPS]")
+
+LAYOUT_WITH_LEGEND()
+SHOW_LEGEND()
+
+@enduml

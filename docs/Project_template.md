@@ -1,6 +1,5 @@
 # Описание решения умного дома
 
-Основная информация, схемы, диаграммы представлены в папке ./docs
 
 # Задание 1. Анализ и планирование
 
@@ -85,14 +84,14 @@
 
 
 **AS-IS**
-* [Схема C4 Context UML AS-IS](./docs/diagrams/Context/C4_Context_Smarthome_AS-IS.puml)
+* [Схема C4 Context UML AS-IS](./diagrams/Context/C4_Context_Smarthome_AS-IS.puml)
 
-![image info](./docs//diagrams/Context/C4_Context_Smarthome_AS-IS.svg)
+![image info](./diagrams/Context/C4_Context_Smarthome_AS-IS.svg)
 ---
 **TO-BE**
-* [Схема C4 Context UML AS-IS](./docs//diagrams/Context/C4_Context_Smarthome_TO-BE.puml)
+* [Схема C4 Context UML AS-IS](./diagrams/Context/C4_Context_Smarthome_TO-BE.puml)
 
-![image info](./docs//diagrams/Context/C4_Context_Smarthome_TO-BE.svg)
+![image info](./diagrams/Context/C4_Context_Smarthome_TO-BE.svg)
 
 
 
@@ -117,29 +116,29 @@
 
 **Диаграмма контейнеров (Containers)**
 
-* [Схема C4 Containers UML](./docs//diagrams/Container/C4_Container_Smarthome.puml)
-![image info](./docs//diagrams/Container/C4_Container_Smarthome.svg)
+* [Схема C4 Containers UML](./diagrams/Container/C4_Container_Smarthome.puml)
+![image info](./diagrams/Container/C4_Container_Smarthome.svg)
 
 
 **Диаграмма компонентов (Components)**
-* [Схема C4 Components UML](./docs//diagrams/Component/C4_Component_Smarthome.puml)
-![image info](./docs//diagrams/Component/C4_Component_Smarthome.svg)
+* [Схема C4 Components UML](./diagrams/Component/C4_Component_Smarthome.puml)
+![image info](./diagrams/Component/C4_Component_Smarthome.svg)
 
 
 **Диаграмма кода или последовательности (Code \ Sequence )**
 
 Пример диаграммы последовательности для регистрации оборудования
-* [Схема C4 Sequence UML](./docs//diagrams/Code/C4_Seq_Smarthome_Devices.puml)
-![image info](./docs//diagrams/Code/C4_Sequence_Diagram_Registrating_Device.svg)
+* [Схема C4 Sequence UML](./diagrams/Code/C4_Seq_Smarthome_Devices.puml)
+![image info](./diagrams/Code/C4_Sequence_Diagram_Registrating_Device.svg)
 
 
 # Задание 3. Разработка ER-диаграммы
 
 Диаграмма основных сущностей микросервисов
-* [ER UML](./docs//diagrams/ER/ER.puml)
-![image info](./docs//diagrams/ER/ER_Smarthome.svg)
+* [ER UML](./diagrams/ER/ER.puml)
+![image info](./diagrams/ER/ER_Smarthome.svg)
 
 
 #  Задание 4. Создание и документирование API
 Описание текущих методов в монолитном решении c помощью OpenApi:
-* [OpenAPI spec](./docs//API/API.yaml)
+* [OpenAPI spec](./API/API.yaml)

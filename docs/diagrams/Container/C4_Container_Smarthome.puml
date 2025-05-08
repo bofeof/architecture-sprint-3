@@ -1,0 +1,121 @@
+@startuml C4_Container_Smarthome
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Диаграмма контейнера (2-й уровень)
+
+skinparam nodesep 40
+skinparam ranksep 150
+LAYOUT_WITH_LEGEND()
+
+
+Person(user, "User", "Пользователь(-и) системы")
+Person(admin, "Admin", "Администратор системы")
+
+Boundary(company, "Компания Smart Home"){
+    Person_Ext(support, "Support Service", "Служба поддержки")
+    System_Ext(device_service_ext, "Device registration service", "Внешний сервис провайдера для проверки оборудования")
+}
+
+
+System_Boundary(smartHome, "Smart Home System") {
+    
+    ' Apps
+    Container(web_app, "Web \SPA Application",  "React", "Веб-приложение",)
+    Container(mobile_app, "Mobile Application", "Kotlin",  "Мобильное приложение")
+
+    ' Gateways
+    Container(api_gateway_web, "API Gateway / BFF", "Kong", "Точка входа для веб\SPA клиентов")
+    Container(api_gateway_mob, "API Gateway / BFF", "Kong", "Точка входа для мобильных клиентов")
+
+
+    'Services
+    Container(device_service, "Device Service", "Java + PostgreSQL", "Cервис для управления оборудованием")
+    Container(heating_service, "Heating Service", "Java + PostgreSQL", "Cервис для управления отоплением")
+    Container(temperature_service, "Temperature Service", "Java + PostgreSQL", "Cервис для управления температурой")
+    Container(user_service, "User Service", "Java + PostgreSQL", "Cервис для управление пользователями, администраторами, настройка ролей")
+    Container(light_service, "Light Service", "Java + PostgreSQL", "Cервис для управления светом")
+    Container(gate_service, "Gate Service", "Java + PostgreSQL", "Cервис для управления воротами")
+    Container(video_service, "Video Service", "Java + TimescaleDB", "Cервис для видеостриминга")
+    Container(monitoring_service, "Monitoring Service", "Prometheus + Grafana + ELK", "Cервис для мониторинга")
+    Container(auth_service, "Auth Service", "Keycloak + OAuth2.0", "Cервис для авторизации и аутентификации, выдача токенов")
+    Container(notification_service, "Notification Service","Java + PostgreSQL",  "Cервис для оповещений")
+
+    Container(kafka_service, "Kafka", "Event Streaming", "Брокер для обмена событиями между микросервисами")
+
+    SystemDb(device_service_db, "Device Service DB",  "PostgreSQL", "БД для оборудования")
+    SystemDb(heating_service_db, "Heating Service DB", "PostgreSQL", "БД для отопления")
+    SystemDb(temperature_service_db, "Temperature Service DB", "PostgreSQL", "БД для температуры")
+    SystemDb(user_service_db, "User\Admin Service DB", "PostgreSQL" , "БД для пользователей")
+    SystemDb(light_service_db, "Light Service DB", "PostgreSQL",  "БД для света")
+    SystemDb(gate_service_db, "Gate Service DB", "PostgreSQL", "БД для дверей и ворот" )
+    SystemDb(video_service_db, "Video Service DB", "TimescaleDB", "БД для видеостриминга")
+    SystemDb(notification_service_db, "Notification Service DB", "PostgreSQL", "БД для оповещений")
+
+}
+
+Rel(user, web_app, "")
+Rel(admin, web_app, "")
+Rel(support, web_app, "")
+Rel(user, mobile_app, "")
+Rel(admin, mobile_app, "")
+Rel(support, mobile_app, "")
+
+
+Rel(web_app, api_gateway_web, "")
+Rel(mobile_app, api_gateway_mob, "")
+
+Rel(device_service, device_service_ext, "REST API")
+
+' API Gateway x Services
+Rel(api_gateway_mob, device_service, "REST API")
+Rel(api_gateway_mob, heating_service, "REST API")
+Rel(api_gateway_mob, temperature_service, "REST API")
+Rel(api_gateway_mob, user_service, "REST API")
+Rel(api_gateway_mob, light_service, "REST API")
+Rel(api_gateway_mob, gate_service, "REST API")
+Rel(api_gateway_mob, video_service, "REST API")
+Rel(api_gateway_mob, monitoring_service, "REST API")
+Rel(api_gateway_mob, auth_service, "REST API")
+Rel(api_gateway_mob, notification_service, "REST API")
+
+Rel(api_gateway_web, device_service, "REST API")
+Rel(api_gateway_web, heating_service, "REST API")
+Rel(api_gateway_web, temperature_service, "REST API")
+Rel(api_gateway_web, user_service, "REST API")
+Rel(api_gateway_web, light_service, "REST API")
+Rel(api_gateway_web, gate_service, "REST API")
+Rel(api_gateway_web, video_service, "REST API")
+Rel(api_gateway_web, monitoring_service, "REST API")
+Rel(api_gateway_web, auth_service, "REST API")
+Rel(api_gateway_web, notification_service, "REST API")
+
+' Kafka
+Rel(device_service, kafka_service, "Публикует события по оборудованию")
+Rel(heating_service, kafka_service, "Публикует события по отоплению")
+Rel(temperature_service, kafka_service, "Публикует события по температуре")
+Rel(light_service, kafka_service, "Публикует события по свету")
+Rel(gate_service, kafka_service, "Публикует события по воротам и дверям")
+Rel(monitoring_service, kafka_service, "Подписывается на события")
+Rel(notification_service, kafka_service, "Подписывается на события")
+Rel(kafka_service, notification_service, "Публикует события")
+
+' Services x DB
+Rel(device_service, device_service_db, "Чтение\Запись")
+Rel(heating_service, heating_service_db, "Чтение\Запись")
+Rel(temperature_service, temperature_service_db, "Чтение\Запись")
+Rel(light_service, light_service_db, "Чтение\Запись")
+Rel(gate_service, gate_service_db,"Чтение\Запись")
+Rel(video_service, video_service_db, "Чтение\Запись")
+Rel(notification_service, notification_service_db, "Чтение\Запись")
+Rel(user_service, user_service_db, "Чтение\Запись")
+Rel(auth_service, user_service_db, "Чтение\Запись")
+
+Rel(monitoring_service, user, "Показ данных по мониторингу")
+Rel(monitoring_service, admin, "Показ данных по мониторингу")
+Rel(monitoring_service, support, "Показ данных по мониторингу")
+
+
+SHOW_LEGEND()
+
+@enduml
